@@ -18,6 +18,8 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
 ));
 
 $db_config = json_decode(file_get_contents(__DIR__.'/../src/config/db.json'), true);
+//TODO TW: Muss das ganze Config management (Hostunabhängig machen. 
+
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
         'db.options' => array(
         'driver' => 'pdo_mysql',
