@@ -48,17 +48,19 @@ $app->get('/', function () use ($app) {
     return "empty site";
 });
 
-$app->get('/confirmation/{hash}', function ($hash) use ($app) {
+$app->get('/confirmation', function () use ($app) {
+    return "hash missing";
+});
+
+$app->get('/participant/{hash}', function ($hash) use ($app) {
     
     $sql = 'SELECT * FROM anmeldungen WHERE hash = ?';
     $query = $app['db']->fetchAssoc($sql, array((string) $hash));
     
     $output = "";
-    foreach($query as $entry) {
-        foreach($entry as $key => $value) {
+        foreach($query as $key => $value) {
             $output .= "$key - $value<br>";
         }
-    }
     
     //print "START".$output."END";
     /*
@@ -67,6 +69,26 @@ $app->get('/confirmation/{hash}', function ($hash) use ($app) {
     ));
     */
     return $output;
+});
+
+$app->get('/confirmation/{hash}', function ($hash) use ($app) {
+    
+    $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
+    $query = $app['db']->fetchAssoc($sql, array((string) $hash));
+    
+    return nl2br($app['twig']->render('confirmation.twig', array(
+            'pfadiname' => $query['pfadiname'],
+            'geschlecht' => $query['geschlecht'],
+            'kursnr' => $query['kursnr'],
+            'kurs' => $query['kurs'],
+            'kursleitername' => $query['kursleitername'],
+            'kursleiterpfadiname' => $query['kursleiterpfadiname'],
+            'kursleitergeschlecht' => $query['kursleitergeschlecht'],
+            'kursleiteremail' => $query['kursleiteremail'],
+            'kursleiternatel' => $query['kursleiternatel'],
+            'kursdaten' => $query['kursdaten'],
+            'konto' => 'IBAN: CHxyz',
+        )));
 });
 
 $app->run();

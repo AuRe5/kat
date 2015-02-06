@@ -1,0 +1,25 @@
+{% if geschlecht == 'W' %} Liebe {%else%} Lieber {% endif %} {{ pfadiname }}
+
+Wir freuen uns dir mitteilen zu können, dass du definitiv für den {{ kurs }} ({{ kursnr }}) angemeldet bist. 
+
+{% if kursleitergeschlecht == 'W' %} Deine Kursleiterin {%else%} Dein Kursleiter {% endif %} ist {{kursleitername}} v/o {{kursleiterpfadiname}}  ({{kursleiteremail}} / {{kursleiternatel}}). 
+
+Du erhältst von {{kursleiterpfadiname}} dann später noch die detaillierten Infos zum Kurs. Es stehen aber bereits folgende Kursdaten fest:
+
+{{kursdaten}}
+
+Der Teilnehmerbeitrag beträgt für deinen Kurs CHF 180.- . Überweise das Geld bitte bis am Samstag, 28.02.2015 auf folgendes Konto:
+
+{{ konto }}
+
+%basispruefung%
+
+%jsgesuch%%lesebestaetigung% 
+
+Bei Fragen zum Kurs wendest du dich am besten direkt an {% if kursleitergeschlecht == 'W' %} die Kursleiterin {%else%} den Kursleiter {% endif %}. 
+
+Wir wünschen dir einen unvergesslichen und lehrreichen Kurs und danken dir für deinen Einsatz in der Pfadi.
+
+Viele Grüsse & AZB
+
+Pipra, Twister & Goblin
