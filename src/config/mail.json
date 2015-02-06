@@ -1,6 +1,6 @@
 {
-	"host": "localhost",
-	"mail": "kursadministration@kat.local",
-	"password": "",
+	"host": "asmtp.mail.hostpoint.ch",
+	"mail": "kursadministration@aure-foif.ch",
+	"password": "OQW48NQi",
 	"port": "587"
 }
