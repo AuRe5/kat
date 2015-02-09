@@ -2,6 +2,9 @@
 
 // web/index.php
 require_once __DIR__.'/../vendor/autoload.php';
+#require_once(__DIR__.'/../lib/fpdf17/fpdf.php');
+#require_once(__DIR__.'/../lib/FPDI-1.4.4/fpdi.php');
+
 
 use Silex\Provider\FormServiceProvider;
 use Symfony\Component\HttpFoundation\Request;
@@ -73,6 +76,12 @@ $app->get('/participant/{hash}', function ($hash) use ($app) {
 
 $app->get('/confirmation/{hash}', function ($hash) use ($app) {
     
+    # Check
+    # if abt = SA | CH -> keine Rechnung
+    # if tn = extern -> keine Rechnung
+    # AuRe vs. Korps Konto
+    
+    
     $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
     $query = $app['db']->fetchAssoc($sql, array((string) $hash));
     
@@ -87,8 +96,88 @@ $app->get('/confirmation/{hash}', function ($hash) use ($app) {
             'kursleiteremail' => $query['kursleiteremail'],
             'kursleiternatel' => $query['kursleiternatel'],
             'kursdaten' => $query['kursdaten'],
+            'kurskosten' => $query['kurskosten'],
+            'grusszeile' => $query['grusszeile'],
             'konto' => 'IBAN: CHxyz',
         )));
+});
+
+$app->get('/readconfirmation/{hash}', function ($hash) use ($app) {
+    
+    $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
+    $query = $app['db']->fetchAssoc($sql, array((string) $hash));
+    
+    return nl2br($app['twig']->render('readconfirmation.twig', array(
+        'pfadiname' => $query['pfadiname'],
+        'geschlecht' => $query['geschlecht'],
+        'grusszeile' => $query['grusszeile'],
+    )));
+});
+
+$app->get('/jsrequest/{hash}', function ($hash) use ($app) {
+    
+    $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
+    $query = $app['db']->fetchAssoc($sql, array((string) $hash));
+    
+
+    ###
+    
+    // initiate FPDI 
+    $pdf =& new FPDI(); 
+    // add a page 
+    $pdf->AddPage(); 
+    // set the sourcefile 
+    $pdf->setSourceFile('.data/bestaetigungjugendurlaubd.pdf'); 
+    // import page 1 
+    $tplIdx = $pdf->importPage(1); 
+    // use the imported page as the template 
+    $pdf->useTemplate($tplIdx, 0, 0); 
+
+    // now write some text above the imported page 
+    $pdf->SetFont('Arial'); 
+    $pdf->SetTextColor(0,10,100); 
+    $pdf->SetFontSize(10);
+
+    $pdf->SetXY(57, 34); 
+    $pdf->Write(0, utf8_decode($query['nachname']." ".$query['vorname'])); 
+
+    $pdf->SetXY(48, 44); 
+    $pdf->Write(0, utf8_decode($query['geburtstag']));
+
+    $pdf->SetXY(39, 54.5); 
+    $pdf->Write(0, utf8_decode($query['strasse'].", ".$query['plz']." ".$query['ort']));  
+
+    $pdf->SetXY(32, 80); 
+    $pdf->Write(0, "20.04.2014");
+
+    $pdf->SetXY(112, 80); 
+    $pdf->Write(0, "24.04.2014");
+
+    $pdf->SetXY(23, 165); 
+    $pdf->Write(0, "X");
+
+    $pdf->SetXY(23, 186); 
+    $pdf->Write(0, utf8_decode("Teilnehmer im J+S Leiterkurs LS/T, Kursnummer: ".$query['kursnr']));
+
+    $pdf->SetXY(23, 194); 
+    $pdf->Write(0, utf8_decode("Organisiert von der Ausbildungsregion 5, Pfadi Züri, Pfadibewegung Schweiz in Zusammenarbeit"));
+
+    $pdf->SetXY(23, 202); 
+    $pdf->Write(0, "mit Jugend + Sport.");
+
+    $pdf->SetXY(46, 267); 
+    $pdf->Write(0, utf8_decode("Kontakt für Rückfragen: Simon Stäheli v/o Goblin, Waffenplatzstr. 40, 8002 Zürich"));
+
+    $pdf->SetXY(46, 271); 
+    $pdf->Write(0, utf8_decode("goblin@pfadi-af.ch, Ausbildungsverantwortlicher, Ausbildungsregion 5, Pfadi Züri"));
+
+    #echo "pdf done";
+
+    ###
+
+
+    return $pdf->Output('jsbestaetigung.pdf', 'D');
+
 });
 
 $app->run();
