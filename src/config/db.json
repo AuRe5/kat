@@ -1,6 +1,6 @@
 {
-	"host": "customwe.mysql.db.internal",
-	"username": "customwe_aure",
-	"password": "TaEA3gm1",
-	"database": "customwe_aure"
+	"host": "localhost",
+	"username": "kat",
+	"password": "kat",
+	"database": "kat"
 }
