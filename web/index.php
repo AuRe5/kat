@@ -2,8 +2,7 @@
 
 // web/index.php
 require_once __DIR__.'/../vendor/autoload.php';
-#require_once(__DIR__.'/../lib/fpdf17/fpdf.php');
-#require_once(__DIR__.'/../lib/FPDI-1.4.4/fpdi.php');
+
 
 
 use Silex\Provider\FormServiceProvider;
@@ -55,6 +54,7 @@ $app->get('/confirmation', function () use ($app) {
     return "hash missing";
 });
 
+# Dummy route - for nothing
 $app->get('/participant/{hash}', function ($hash) use ($app) {
     
     $sql = 'SELECT * FROM anmeldungen WHERE hash = ?';
@@ -65,21 +65,72 @@ $app->get('/participant/{hash}', function ($hash) use ($app) {
             $output .= "$key - $value<br>";
         }
     
-    //print "START".$output."END";
-    /*
-    return $app['twig']->render('annualplan.twig', array(
-        'query' => $query,
-    ));
-    */
     return $output;
 });
 
+# Kursbestätigung an einzelnen Empfänger senden
+$app->get('/sendconfirmation/{hash}', function ($hash) use ($app) {
+    
+    # Check
+    # if abt = SA | CH -> keine Rechnung
+    # if tn = extern -> keine Rechnung
+    # AuRe vs. Korps Konto
+    
+    $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
+    $query = $app['db']->fetchAssoc($sql, array((string) $hash));
+    
+    $mail = $app['twig']->render('confirmation.twig', array(
+            'pfadiname' => $query['pfadiname'],
+            'geschlecht' => $query['geschlecht'],
+            'kursnr' => $query['kursnr'],
+            'kurs' => $query['kurs'],
+            'kursleitername' => $query['kursleitername'],
+            'kursleiterpfadiname' => $query['kursleiterpfadiname'],
+            'kursleitergeschlecht' => $query['kursleitergeschlecht'],
+            'kursleiteremail' => $query['kursleiteremail'],
+            'kursleiternatel' => $query['kursleiternatel'],
+            'kursdaten' => $query['kursdaten'],
+            'kurskosten' => $query['kurskosten'],
+            'grusszeile' => $query['grusszeile'],
+            'konto' => 'IBAN: CHxyz',
+        ));
+    
+    $sql = 'SELECT * FROM anmeldungen WHERE hash = ?';
+    $query = $app['db']->fetchAssoc($sql, array((string) $hash));
+    
+    $mail_config = json_decode(file_get_contents(__DIR__.'/../src/config/mail.json'), true);
+    
+    $transport = Swift_SmtpTransport::newInstance($mail_config['host'], $mail_config['port'])
+      ->setUsername($mail_config['mail'])
+      ->setPassword($mail_config['password']);
+    
+    $mailer = Swift_Mailer::newInstance($transport);
+        
+    $message = \Swift_Message::newInstance()
+        ->setSubject('Kursbestätigung')
+        ->setFrom(array('kursbestaetigung@aure-foif.ch' => "AuRe5 Kursadministration"))
+        ->setReplyTo(array('kursbestaetigung@aure-foif.ch' => "AuRe5 Kursadministration"))
+        ->setTo(array("goblin@pfadi-af.ch" => 'Goblin')) # dummy empfänger
+        ->setBody($mail);
+
+    
+    if ($mailer->send($message,$failures))
+    {
+        $sql = 'UPDATE anmeldungen a SET a.versendet = NOW() WHERE a.hash = "'.$hash.'"';
+        $app['db']->query($sql); 
+    }
+    
+    return "Kursbestätigung wurde versendet";
+});
+
+# Inhalt E-Mail Bestätigung ausgeben
 $app->get('/confirmation/{hash}', function ($hash) use ($app) {
     
     # Check
     # if abt = SA | CH -> keine Rechnung
     # if tn = extern -> keine Rechnung
     # AuRe vs. Korps Konto
+    # separater ServiceProvider?
     
     
     $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
@@ -102,6 +153,7 @@ $app->get('/confirmation/{hash}', function ($hash) use ($app) {
         )));
 });
 
+# Lesebestaetigung im E-Mail
 $app->get('/readconfirmation/{hash}', function ($hash) use ($app) {
     
     $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
@@ -114,6 +166,7 @@ $app->get('/readconfirmation/{hash}', function ($hash) use ($app) {
     )));
 });
 
+# J+S Urlaubsgesuch herunterladen als PDF
 $app->get('/jsrequest/{hash}', function ($hash) use ($app) {
     
     $sql = 'SELECT * FROM anmeldungen a JOIN kurse k ON a.kursnr = k.kursnr  WHERE a.hash = ?';
@@ -121,7 +174,13 @@ $app->get('/jsrequest/{hash}', function ($hash) use ($app) {
     
 
     ###
+    # EXTRACT PDF GENERATION TO SERVICE PROVIDER
+    ###
+    #require_once(__DIR__.'/../lib/fpdf17/fpdf.php');
+    #require_once(__DIR__.'/../lib/FPDI-1.4.4/fpdi.php');
     
+    
+    /*
     // initiate FPDI 
     $pdf =& new FPDI(); 
     // add a page 
@@ -173,10 +232,11 @@ $app->get('/jsrequest/{hash}', function ($hash) use ($app) {
 
     #echo "pdf done";
 
-    ###
-
-
     return $pdf->Output('jsbestaetigung.pdf', 'D');
+    ###
+    */
+
+    return "";
 
 });
 
