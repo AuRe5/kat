@@ -176,17 +176,15 @@ $app->get('/jsrequest/{hash}', function ($hash) use ($app) {
     ###
     # EXTRACT PDF GENERATION TO SERVICE PROVIDER
     ###
-    #require_once(__DIR__.'/../lib/fpdf17/fpdf.php');
-    #require_once(__DIR__.'/../lib/FPDI-1.4.4/fpdi.php');
+    require_once(__DIR__.'/../lib/fpdf17/fpdf.php');
+    require_once(__DIR__.'/../lib/FPDI-1.4.4/fpdi.php');
     
-    
-    /*
     // initiate FPDI 
     $pdf =& new FPDI(); 
     // add a page 
     $pdf->AddPage(); 
     // set the sourcefile 
-    $pdf->setSourceFile('.data/bestaetigungjugendurlaubd.pdf'); 
+    $pdf->setSourceFile(__DIR__.'/../data/bestaetigungjugendurlaubd.pdf'); 
     // import page 1 
     $tplIdx = $pdf->importPage(1); 
     // use the imported page as the template 
@@ -234,9 +232,8 @@ $app->get('/jsrequest/{hash}', function ($hash) use ($app) {
 
     return $pdf->Output('jsbestaetigung.pdf', 'D');
     ###
-    */
 
-    return "";
+    //return "";
 
 });
 
